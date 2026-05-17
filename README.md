@@ -76,7 +76,7 @@ make run                          # Starts the development server
 ```bash
 # Verify everything works using the Makefile shortcut
 make test
-# 27 passed, 0 failed out of 27 tests
+# 29 passed, 0 failed out of 29 tests
 ```
 
 ---
