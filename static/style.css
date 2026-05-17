@@ -644,7 +644,7 @@ ul, ol { list-style: none; }
 .skill-strip-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--gray-500);
+  color: var(--indigo-800);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -655,18 +655,46 @@ ul, ol { list-style: none; }
   flex-wrap: wrap;
   gap: 0;
 }
-.ss-item {
+.ss-item-indigo {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--gray-700);
-  padding: 0 16px;
+  color: var(--indigo-500);
+  margin: 4px 4px;
+  padding: 4px 16px;
+  border: 1px solid var(--indigo-500);
+  border-radius: 24px;
 }
-.ss-sep {
-  width: 1px;
-  height: 16px;
-  background: var(--gray-300);
-  flex-shrink: 0;
+
+.ss-item-green {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--green-500);
+  margin: 4px 4px;
+  padding: 4px 16px;
+  border: 1px solid var(--green-500);
+  border-radius: 24px;
 }
+
+.ss-item-purple {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--purple-600);
+  margin: 4px 4px;
+  padding: 4px 16px;
+  border: 1px solid var(--purple-600);
+  border-radius: 24px;
+}
+
+.ss-item-pink {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--pink-500);
+  margin: 4px 4px;
+  padding: 4px 16px;
+  border: 1px solid var(--pink-500);
+  border-radius: 24px;
+}
+
 
 /* ---- How It Works ----------------------------------------- */
 .how-section {
