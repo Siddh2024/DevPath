@@ -523,53 +523,27 @@ if (clearFiltersBtn) {
             return;
           }
 
-          renderResults(data.projects || [], data.message);
+          // renderResults(data.projects || [], data.message);
+          console.log(Array.isArray(data.projects));
+          console.log(typeof data.projects);
+          console.log(data.projects);
+
+          renderResults(Array.isArray(data.projects) ? data.projects : [], data.message);
         })
-        .catch(function () {
-
+        .catch(function (err) {
           setLoadingState(false);
-    //combine form values into an object to send to server/api
-    var payload = {
-      // Prefer the hidden input value; fall back to raw text box if hidden input is empty
-      skills: skillsHidden.value.trim() || skillsTextInput.value.trim(),
-      level: document.getElementById("level").value,
-      interest: document.getElementById("interest").value,
-      time: document.getElementById("time").value
-    };
-
-    //post the data to backend api as JSON, then handle the response
-    fetch("/api/recommend", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify(payload) //convert object to json string
-    })
-      .then(function (res) { return res.json(); }) //parse the response as JSON
-      .then(function (data) {
-        setLoadingState(false);
-
           var generalErr = document.getElementById("form-error-general");
-
           if (generalErr) {
-            generalErr.textContent =
-              "Something went wrong. Please try again.";
+            generalErr.textContent = "Something went wrong. Please try again.";
           }
+          console.error("API request failed:", err);
         });
+        })
+
     });
-        if (data.error) {
-          var generalErr = document.getElementById("form-error-general");
-          if (generalErr) generalErr.textContent = data.error;
-          return;
-        }
-        renderResults(data.projects || [], data.message);
-      })
-      .catch(function (err) {
-        // this runs if the network request itself fails 
-        setLoadingState(false);
-        var generalErr = document.getElementById("form-error-general");
-        if (generalErr) generalErr.textContent = "Something went wrong. Please try again.";
-        console.error("API request failed:", err);
-      });
-  });
+        
+      }; 
+
 
   // Manages the loading state of the form and results section(whats visible or not)
   function setLoadingState(isLoading) {
@@ -626,8 +600,14 @@ if (clearFiltersBtn) {
     resultsGrid.style.display = "grid";
 
     //build a card for each project and add it to the grid
+    //build a card for each project and add it to the grid
     projects.forEach(function (project) {
-      resultsGrid.appendChild(buildProjectCard(project));
+      console.log("inside loop", project);
+      try {
+        resultsGrid.appendChild(buildProjectCard(project));
+      } catch (err) {
+        console.error(err);
+      }
     });
 
     resultsSection.scrollIntoView({ behavior: "smooth" });
@@ -636,6 +616,7 @@ if (clearFiltersBtn) {
   // builds one project card as a DOM element and returns it
   // the card has title, short description, tags and link
   function buildProjectCard(project) {
+    
     var card = document.createElement("div");
     card.className = "project-card";
 
@@ -677,13 +658,11 @@ if (clearFiltersBtn) {
     link.href = "/project/" + project.id; //each project has a unique id
 
     footer.appendChild(link);
-
     // Assemble the card in order
     card.appendChild(title);
     card.appendChild(desc);
     card.appendChild(tagsRow);
     card.appendChild(footer);
-
     return card;
   }
 
@@ -955,3 +934,4 @@ if (scrollTopBtn) {
     window.addEventListener('scroll', handleScroll);
     scrollTopBtn.addEventListener('click', scrollToTop);
 }
+
