@@ -298,6 +298,13 @@ def test_scoring_weights_has_all_keys():
     assert set(SCORING_WEIGHTS.keys()) == expected_keys
 
 
+def test_home_route_with_share_params():
+    """The homepage should load normally even when share query params are present."""
+    client = get_client()
+    response = client.get("/?skills=Python,HTML&level=Beginner&interest=Data&time=Low")
+    assert response.status_code == 200
+
+
 # ============================================================
 # Run tests directly (no pytest required)
 # ============================================================

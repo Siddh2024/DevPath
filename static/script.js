@@ -608,12 +608,17 @@ if (clearFiltersBtn) {
     // Clear out any cards from a previous search before showing new ones
     resultsGrid.innerHTML = "";
 
+    // Reference the share button wrapper so we can show/hide it with results
+    var shareWrap = document.getElementById("share-result-wrap");
+
     if (!projects || projects.length === 0) {
       resultsGrid.style.display     = "none";
       resultsEmptyEl.style.display  = "block";
       resultsGrid.style.display = "none";
       resultsEmptyEl.style.display = "block";
       if (message && emptyMessageEl) emptyMessageEl.textContent = message;
+      // Hide the share button when there are no results to share
+      if (shareWrap) shareWrap.style.display = "none";
     if (!projects || projects.length === 0) { //if no projects returned from api, show the "no results" message and hide the grid
       resultsGrid.style.display      = "none";
       resultsEmptyEl.style.display   = "block";
@@ -624,6 +629,9 @@ if (clearFiltersBtn) {
 
     resultsEmptyEl.style.display = "none";
     resultsGrid.style.display = "grid";
+
+    // Show the share button when results are displayed
+    if (shareWrap) shareWrap.style.display = "flex";
 
     //build a card for each project and add it to the grid
     projects.forEach(function (project) {
@@ -702,6 +710,104 @@ if (clearFiltersBtn) {
     // Only add "..." if the text is actually longer than the limit
     return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
   }
+
+
+  // ----------------------------------------------------------
+  // Share My Result — build URL and copy to clipboard
+  // ----------------------------------------------------------
+
+  // Build a shareable URL from the current form selections
+  function buildShareUrl() {
+    var baseUrl = window.location.origin + window.location.pathname;
+    var params = new URLSearchParams();
+    params.set("skills", skillsHidden.value.trim());
+    params.set("level", document.getElementById("level").value);
+    params.set("interest", document.getElementById("interest").value);
+    params.set("time", document.getElementById("time").value);
+    return baseUrl + "?" + params.toString();
+  }
+
+  var shareBtn = document.getElementById("share-result-btn");
+  var shareToast = document.getElementById("share-toast");
+  var shareToastTimeout = null;
+
+  // Show the "Copied!" state on the share button and display the toast
+  function showShareSuccess() {
+    if (!shareBtn) return;
+    var originalLabel = shareBtn.querySelector(".share-btn-label");
+    if (originalLabel) originalLabel.textContent = "Copied!";
+    shareBtn.classList.add("copied");
+
+    if (shareToast) shareToast.classList.add("show");
+
+    // Auto-reset after 2.5 seconds
+    clearTimeout(shareToastTimeout);
+    shareToastTimeout = setTimeout(function () {
+      if (originalLabel) originalLabel.textContent = "Share My Result";
+      shareBtn.classList.remove("copied");
+      if (shareToast) shareToast.classList.remove("show");
+    }, 2500);
+  }
+
+  // Fallback clipboard copy using a hidden textarea (for older browsers)
+  function fallbackShareCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand("copy"); showShareSuccess(); } catch (e) { /* silent fail */ }
+    document.body.removeChild(ta);
+  }
+
+  if (shareBtn) {
+    shareBtn.addEventListener("click", function () {
+      var url = buildShareUrl();
+
+      // Use Clipboard API with textarea fallback
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () {
+          showShareSuccess();
+        }).catch(function () {
+          fallbackShareCopy(url);
+        });
+      } else {
+        fallbackShareCopy(url);
+      }
+    });
+  }
+
+
+  // ----------------------------------------------------------
+  // Auto-fill from shared URL query params
+  // ----------------------------------------------------------
+
+  // Read query params on page load and auto-fill the form if all params are present
+  (function initFromQueryParams() {
+    var params = new URLSearchParams(window.location.search);
+    var qSkills   = params.get("skills");
+    var qLevel    = params.get("level");
+    var qInterest = params.get("interest");
+    var qTime     = params.get("time");
+
+    // Only auto-fill if all four params are present
+    if (!qSkills || !qLevel || !qInterest || !qTime) return;
+
+    // Add each skill from the comma-separated query param
+    qSkills.split(",").forEach(function (s) {
+      var trimmed = s.trim();
+      if (trimmed) addSkill(trimmed);
+    });
+
+    // Set dropdown values to match the shared selections
+    document.getElementById("level").value = qLevel;
+    document.getElementById("interest").value = qInterest;
+    document.getElementById("time").value = qTime;
+
+    // Auto-trigger the form submission to show results immediately
+    form.dispatchEvent(new Event("submit", { cancelable: true }));
+  })();
 
 } // end isIndexPage
 
