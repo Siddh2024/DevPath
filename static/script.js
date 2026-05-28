@@ -206,6 +206,7 @@ if (clearFiltersBtn) {
     activeSuggestionIndex = -1;
     if (suggestionsDiv) {
       suggestionsDiv.style.display = "none";
+      suggestionsDiv.classList.remove("show");
       suggestionsDiv.innerHTML = "";
     }
     syncSuggestionsA11yState();
@@ -230,10 +231,17 @@ if (clearFiltersBtn) {
     items.forEach(function (skill, index) {
       var item = document.createElement("div");
       item.className = "suggestion-item";
+      
+      // Check if skill is already selected for multi-select styling
+      var isSelected = isSkillSelected(skill);
+      if (isSelected) {
+        item.classList.add("selected");
+      }
+      
       item.textContent = skill;
       item.setAttribute("role", "option");
       item.setAttribute("id", "skills-suggestion-" + index);
-      item.setAttribute("aria-selected", "false");
+      item.setAttribute("aria-selected", isSelected ? "true" : "false");
 
       // Prevent the input blur handler from closing the menu before click runs.
       item.addEventListener("mousedown", function (evt) {
@@ -247,6 +255,11 @@ if (clearFiltersBtn) {
 
       item.addEventListener("click", function () {
         selectSuggestion(skill);
+        // Keep dropdown open if clicking from dropdown (multi-select mode)
+        if (suggestionsDiv.classList.contains("show")) {
+          displaySuggestions(items);
+          skillsTextInput.focus();
+        }
       });
 
       suggestionsDiv.appendChild(item);
@@ -319,6 +332,24 @@ if (clearFiltersBtn) {
       skillsTextInput.value = "";
     });
   });
+
+  // Multi-select dropdown toggle functionality
+  var dropdownBtn = document.getElementById("skills-dropdown-toggle");
+  if (dropdownBtn) {
+    dropdownBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var suggestionsOpen = suggestionsDiv.style.display === "block";
+      
+      if (suggestionsOpen) {
+        hideSuggestions();
+      } else {
+        // Show all available skills in dropdown
+        displaySuggestions(availableSkills);
+        suggestionsDiv.classList.add("show");
+      }
+    });
+  }
 
   // Show suggestions on input
   skillsTextInput.addEventListener("input", function (evt) {
@@ -510,7 +541,7 @@ if (clearFiltersBtn) {
           return res.json();
         })
         .then(function (data) {
-
+          console.log("API Response:", data);
           setLoadingState(false);
 
           if (data.error) {
@@ -526,16 +557,13 @@ if (clearFiltersBtn) {
           renderResults(data.projects || [], data.message);
         })
         .catch(function () {
-
           setLoadingState(false);
-    //combine form values into an object to send to server/api
-    var payload = {
-      // Prefer the hidden input value; fall back to raw text box if hidden input is empty
-      skills: skillsHidden.value.trim() || skillsTextInput.value.trim(),
-      level: document.getElementById("level").value,
-      interest: document.getElementById("interest").value,
-      time: document.getElementById("time").value
-    };  
+          var generalErr = document.getElementById("form-error-general");
+          if (generalErr) {
+            generalErr.textContent = "Network error. Please try again.";
+          }
+        });
+    });
   });
 
   // Manages the loading state of the form and results section(whats visible or not)
@@ -568,19 +596,16 @@ if (clearFiltersBtn) {
   //takes the array of projects from the api and draws them on the page as cards
   //if array is empty it shows the "no results" message instead
   function renderResults(projects, message) {
+    console.log("Rendering results with projects:", projects);
+    console.log("Message:", message);
+    
     resultsSection.style.display = "block";
     resultsLoadingEl.style.display = "none";
     // Clear out any cards from a previous search before showing new ones
     resultsGrid.innerHTML = "";
 
     if (!projects || projects.length === 0) {
-      resultsGrid.style.display     = "none";
-      resultsEmptyEl.style.display  = "block";
       resultsGrid.style.display = "none";
-      resultsEmptyEl.style.display = "block";
-      if (message && emptyMessageEl) emptyMessageEl.textContent = message;
-    if (!projects || projects.length === 0) { //if no projects returned from api, show the "no results" message and hide the grid
-      resultsGrid.style.display    = "none";
       resultsEmptyEl.style.display = "block";
 
       // Show a friendly custom message when the user selected an interest
@@ -613,6 +638,10 @@ if (clearFiltersBtn) {
   function buildProjectCard(project) {
     var card = document.createElement("div");
     card.className = "project-card";
+
+    // Console logging for debugging
+    console.log("Building card for project:", project);
+    console.log("Project ID:", project.id);
 
     // Title
     var title = document.createElement("h3");
@@ -650,6 +679,8 @@ if (clearFiltersBtn) {
     link.className = "btn-details";
     link.textContent = "View Full Project";
     link.href = "/project/" + project.id; //each project has a unique id
+    
+    console.log("Created link with href:", link.href);
 
     footer.appendChild(link);
 

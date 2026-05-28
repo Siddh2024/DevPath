@@ -1368,6 +1368,82 @@ label {
   box-shadow: none;
 }
 
+/* Multi-select wrapper for skills input */
+.skill-multiselect-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 140px;
+  gap: 4px;
+  position: relative;
+}
+
+.skill-dropdown-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--t);
+  flex-shrink: 0;
+}
+
+.skill-dropdown-btn:hover {
+  color: var(--indigo-600);
+}
+
+.skill-dropdown-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Multi-select dropdown styling */
+.skills-dropdown.show {
+  display: block;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.skills-dropdown .suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skills-dropdown .suggestion-item::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: 3px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.skills-dropdown .suggestion-item.selected::before {
+  background: var(--indigo-600);
+  border-color: var(--indigo-600);
+  box-shadow: inset 0 0 0 2px var(--white);
+}
+
+.skills-dropdown .suggestion-item:hover {
+  background: var(--indigo-50);
+}
+
 /*suggestions dropdown*/
 .skills-suggestions {
   position: absolute;

@@ -26,7 +26,7 @@
         <a href="#home" class="nav-link">Home</a>
         <a href="#how-it-works" class="nav-link">How It Works</a>
         <a href="#features" class="nav-link">Features</a>
-        <a href="#find-project" class="nav-link">Find Project</a>
+        <a href="#the-project" class="nav-link">Find Project</a>
         <a href="https://github.com/komalharshita/DevPath" target="_blank" rel="noopener noreferrer" class="nav-btn-outline">GitHub</a>
       </div>
       <!-- Mobile hamburger toggle -->
@@ -39,7 +39,7 @@
       <a href="#home" class="nav-mobile-link">Home</a>
       <a href="#how-it-works" class="nav-mobile-link">How It Works</a>
       <a href="#features" class="nav-mobile-link">Features</a>
-      <a href="#find-project" class="nav-mobile-link">Find Project</a>
+      <a href="#the-project" class="nav-mobile-link">Find Project</a>
       <a href="https://github.com/komalharshita/DevPath" target="_blank" rel="noopener noreferrer" class="nav-mobile-link">GitHub</a>
     </div>
   </nav>
@@ -78,7 +78,7 @@
 
 
         <div class="hero-cta-row">
-          <a href="#find-project" class="btn-hero-primary">Start Finding Projects</a>
+          <a href="#the-project" class="btn-hero-primary">Start Finding Projects</a>
           <a href="#how-it-works" class="btn-hero-ghost">See How It Works</a>
         </div>
       </div>
@@ -285,7 +285,7 @@
           </div>
           <h3>Personalized Matches</h3>
           <p>Projects are scored against your exact skills, level, and interest — not pulled from a generic list.</p>
-          <a href="#find-project" class="feature-card-link">Try it now</a>
+          <a href="#the-project" class="feature-card-link">Try it now</a>
         </div>
 
         <div class="feature-card feature-card--yellow">
@@ -296,7 +296,7 @@
           </div>
           <h3>Step-by-Step Roadmaps</h3>
           <p>Each project includes a numbered roadmap so you always know what to build next, without guessing.</p>
-          <a href="#find-project" class="feature-card-link">Explore roadmaps</a>
+          <a href="#the-project" class="feature-card-link">Explore roadmaps</a>
         </div>
 
         <div class="feature-card feature-card--purple">
@@ -308,7 +308,7 @@
           </div>
           <h3>Starter Code Included</h3>
           <p>Download a working template for every project. Skip the blank-page problem and start building immediately.</p>
-          <a href="#find-project" class="feature-card-link">Get starter code</a>
+          <a href="#the-project" class="feature-card-link">Get starter code</a>
         </div>
 
       </div>
@@ -318,10 +318,10 @@
   <!-- ============================================================
        Find Project Form Section
        ============================================================ -->
-  <section class="form-section" id="find-project">
+  <section class="form-section" id="the-project">
     <div class="container">
       <div class="section-eyebrow">Get Your Recommendations</div>
-      <h2 class="section-title">Find Your Next Project</h2>
+      <h2 class="section-title">Find The Project</h2>
       <p class="section-sub">Fill in your details below and DevPath will match you to the most relevant projects.</p>
 
       <div class="form-card-outer">
@@ -347,16 +347,21 @@
               </div>
               <div class="skill-input-wrap" id="skill-input-wrap">
                 <div class="skill-chips-selected" id="skill-chips-selected"></div>
-                <input
-                  type="text"
-                  id="skills-input" 
-                  placeholder="Type a skill and press Enter..."
-                  autocomplete="off"
-                  aria-haspopup="listbox"
-                  aria-expanded="false"
-                  aria-controls="skills-suggestions"
-                />
-                <div id="skills-suggestions" class="skills-suggestions"></div>
+                <div class="skill-multiselect-wrapper">
+                  <input
+                    type="text"
+                    id="skills-input" 
+                    placeholder="Type a skill and press Enter or select from dropdown..."
+                    autocomplete="off"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                    aria-controls="skills-suggestions"
+                  />
+                  <button type="button" id="skills-dropdown-toggle" class="skill-dropdown-btn" aria-label="Toggle skills dropdown">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </button>
+                </div>
+                <div id="skills-suggestions" class="skills-suggestions skills-dropdown" style="display: none; max-height: 250px; overflow-y: auto; border: 1px solid var(--color-border); border-top: none; background: white; position: absolute; width: 100%; margin-top: -2px; z-index: 10;"></div>
               </div>
               <!-- Hidden field holds the final comma-separated value -->
               <input type="hidden" id="skills" name="skills" />
@@ -554,7 +559,7 @@
       <div class="cta-inner">
         <h2>Start Building.<br><span class="cta-accent">A New Skill</span> Awaits.</h2>
         <p>Find a project that challenges you and grow with every line of code.</p>
-        <a href="#find-project" class="btn-cta">Find My Project</a>
+        <a href="#the-project" class="btn-cta">Find My Project</a>
       </div>
     </div>
   </section>
@@ -602,7 +607,7 @@
           <li><a href="#home">Home</a></li>
           <li><a href="#how-it-works">How It Works</a></li>
           <li><a href="#features">Features</a></li>
-          <li><a href="#find-project">Find Project</a></li>
+          <li><a href="#the-project">Find Project</a></li>
         </ul>
       </div>
 
