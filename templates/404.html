@@ -5,11 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Page Not Found — DevPath</title>
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+  <!--
+    Anti-FOUC theme script — MUST come before the stylesheet.
+    Reads localStorage synchronously and sets html[data-theme] so the
+    browser applies the correct CSS variables on the very first paint.
+    Falls back to OS prefers-color-scheme if no saved preference exists.
+  -->
+  <script>
+    (function () {
+      try {
+        /* Default to light mode; only honour a value the user explicitly saved */
+        var saved = localStorage.getItem('devpath-theme');
+        document.documentElement.dataset.theme = saved || 'light';
+      } catch (e) { /* localStorage blocked in some private modes */ }
+    }());
+  </script>
   <link rel="stylesheet" href="/static/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <nav class="navbar">
+  <nav class="navbar" aria-label="Main navigation">
     <div class="nav-inner">
       <a href="/" class="nav-logo">DevPath</a>
       <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
@@ -26,5 +41,7 @@
       <a href="/" class="btn-primary" style="display:inline-block;text-decoration:none;padding:14px 32px;">Back to Home</a>
     </div>
   </div>
+  <!-- script.js runs initTheme() which syncs button aria-pressed state -->
+  <script src="/static/script.js"></script>
 </body>
 </html>
