@@ -787,11 +787,42 @@ if (isIndexPage) {
 
     title.textContent = project.title;
 
+    // Description wrapper — keeps text and button as separate child elements
+    // so we never use textContent (which would wipe out child nodes like the button)
     var desc = document.createElement("p");
 
     desc.className = "project-card-desc";
 
-    desc.textContent = truncate(project.description, 120);
+    // Separate span for the description text so we can update it
+    // without touching the toggle button
+    var descText = document.createElement("span");
+    descText.className = "project-card-desc-text";
+
+    var shortText = truncate(project.description, 120);
+    var fullText  = project.description;
+    var isExpanded = false;
+
+    descText.textContent = shortText;
+    desc.appendChild(descText);
+
+    // Only add Read More button if description is actually truncated
+    if (fullText.length > 120) {
+      var readMoreBtn = document.createElement("button");
+      readMoreBtn.className = "read-more-btn";
+      readMoreBtn.textContent = "Read more";
+      // aria-expanded tells screen readers whether the content is expanded or not
+      readMoreBtn.setAttribute("aria-expanded", "false");
+
+      readMoreBtn.addEventListener("click", function () {
+        isExpanded = !isExpanded;
+        // Update only the text span — button stays in the DOM untouched
+        descText.textContent = isExpanded ? fullText : shortText;
+        readMoreBtn.textContent = isExpanded ? "Read less" : "Read more";
+        readMoreBtn.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+      });
+
+      desc.appendChild(readMoreBtn);
+    }
 
     var tagsRow = document.createElement("div");
 
@@ -802,16 +833,9 @@ if (isIndexPage) {
       tagsRow.appendChild(createTag(skill, "skill"));
     });
 
-    tagsRow.appendChild(
-      createTag(
-        project.level,
-        "level " + (project.level || "").toLowerCase()
-      )
-    );
-
-    tagsRow.appendChild(
-      createTag("Time: " + project.time, "time")
-    );
+    var levelClass = "level " + (project.level || "").toLowerCase();
+    tagsRow.appendChild(createTag(project.level, levelClass));
+    tagsRow.appendChild(createTag("Time: " + project.time, "time"));
 
     var footer = document.createElement("div");
 
@@ -822,7 +846,6 @@ if (isIndexPage) {
     link.className = "btn-details";
 
     link.textContent = "View Full Project";
-
     link.href = "/project/" + project.id;
 
     footer.appendChild(link);
@@ -887,5 +910,4 @@ function scrollToTop() {
 if (scrollTopBtn) {
     window.addEventListener('scroll', handleScroll);
     scrollTopBtn.addEventListener('click', scrollToTop);
-}
-}
+  }
