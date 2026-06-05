@@ -48,6 +48,13 @@ var errorMsg = document.getElementById('github-modal-error');
       toggle.classList.remove("open");
     });
   });
+  var mobileLinks = menu.querySelectorAll(".nav-mobile-link");
+  for (var i = 0; i < mobileLinks.length; i++) {
+    mobileLinks[i].addEventListener("click", function () { 
+      menu.classList.remove("open"); 
+      toggle.classList.remove("open");
+    });
+  }
 })();
 
 
@@ -103,6 +110,9 @@ if (clearFiltersBtn) {
                 quickPickChips.forEach(function(chip) {
                     chip.classList.remove("active", "selected");
                 });
+                for (var j = 0; j < quickPickChips.length; j++) {
+                    quickPickChips[j].classList.remove("active", "selected");
+                }
             }
         }
     });
@@ -135,6 +145,7 @@ if (clearFiltersBtn) {
   var visibleSuggestions = [];
   var activeSuggestionIndex = -1;
 
+  // Duplicates marquee items to create a seamless infinite scrolling effect
   function initSkillStripMarquee() {
     var marquee = document.querySelector(".skill-strip-marquee");
     var track = marquee && marquee.querySelector(".skill-strip-track");
@@ -155,6 +166,20 @@ if (clearFiltersBtn) {
         return item.toLowerCase() === skill.toLowerCase();
       }) === index;
   });
+  // Clean up the initial skills list by removing any empty or duplicate entries
+  var uniqueSkills = [];
+  var seenSkills = {};
+  for (var k = 0; k < availableSkills.length; k++) {
+    var s = availableSkills[k];
+    if (typeof s === "string" && s.trim()) {
+      var lower = s.toLowerCase();
+      if (!seenSkills[lower]) {
+        seenSkills[lower] = true;
+        uniqueSkills.push(s);
+      }
+    }
+  }
+  availableSkills = uniqueSkills;
 
   if (suggestionsDiv) {
     suggestionsDiv.setAttribute("role", "listbox");
@@ -162,10 +187,12 @@ if (clearFiltersBtn) {
 
   initSkillStripMarquee();
 
+  // Standardizes skill strings to lowercase for reliable comparisons
   function normalizeSkill(skill) {
     return skill.trim().toLowerCase();
   }
 
+  // Checks if the user has already added this specific skill
   function isSkillSelected(skill) {
     var normalizedSkill = normalizeSkill(skill);
     return selectedSkills.some(function (selectedSkill) {
@@ -188,6 +215,24 @@ if (clearFiltersBtn) {
     }).slice(0, 8);
   }
 
+  // Retrieves the properly capitalized version of a skill if it exists
+  function getCanonicalSkill(rawSkill) {
+    var normalizedSkill = normalizeSkill(rawSkill);
+    var matchedSkill = availableSkills.filter(function (skill) {
+      return normalizeSkill(skill) === normalizedSkill;
+    })[0];
+    return matchedSkill || rawSkill.trim();
+  }
+
+  // Returns up to 8 available skills that match the user's search query
+  function getFilteredSkills(query) {
+    var normalizedQuery = normalizeSkill(query);
+    return availableSkills.filter(function (skill) {
+      return normalizeSkill(skill).indexOf(normalizedQuery) !== -1 && !isSkillSelected(skill);
+    }).slice(0, 8);
+  }
+
+  // Updates ARIA attributes for screen readers based on dropdown visibility
   function syncSuggestionsA11yState() {
     skillsTextInput.setAttribute("aria-expanded", visibleSuggestions.length > 0 ? "true" : "false");
   }
@@ -201,6 +246,18 @@ if (clearFiltersBtn) {
     });
   }
 
+  // Highlights the currently focused item in the autocomplete dropdown
+  function renderActiveSuggestion() {
+    if (!suggestionsDiv) return;
+    var suggestionItems = suggestionsDiv.querySelectorAll(".suggestion-item");
+    for (var i = 0; i < suggestionItems.length; i++) {
+      var isActive = (i === activeSuggestionIndex);
+      suggestionItems[i].classList.toggle("suggestion-item--active", isActive);
+      suggestionItems[i].setAttribute("aria-selected", isActive ? "true" : "false");
+    }
+  }
+
+  // Hides and clears out the autocomplete suggestion box
   function hideSuggestions() {
     visibleSuggestions = [];
     activeSuggestionIndex = -1;
@@ -211,6 +268,7 @@ if (clearFiltersBtn) {
     syncSuggestionsA11yState();
   }
 
+  // Processes the selection of a skill from the dropdown menu
   function selectSuggestion(skill) {
     addSkill(skill);
     skillsTextInput.value = "";
@@ -218,6 +276,7 @@ if (clearFiltersBtn) {
     skillsTextInput.focus();
   }
 
+  // Builds the DOM elements for the autocomplete dropdown based on matches
   function displaySuggestions(items) {
     if (!suggestionsDiv) return;
     visibleSuggestions = items;
@@ -261,6 +320,14 @@ if (clearFiltersBtn) {
       chip.classList.toggle("active", isActive);
       chip.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
+  // Toggles the active visual state on the predefined skill buttons
+  function updateQuickPickState() {
+    for (var i = 0; i < quickPickChips.length; i++) {
+      var chip = quickPickChips[i];
+      var isActive = isSkillSelected(chip.getAttribute("data-skill") || "");
+      chip.classList.toggle("active", isActive);
+      chip.setAttribute("aria-pressed", isActive ? "true" : "false");
+    }
   }
 
   // Add skill on Enter key in the text input
@@ -319,6 +386,24 @@ if (clearFiltersBtn) {
       skillsTextInput.value = "";
     });
   });
+  for (var i = 0; i < quickPickChips.length; i++) {
+    (function (chip) {
+      chip.addEventListener("click", function () {
+        var skill = chip.getAttribute("data-skill");
+        var isAlreadySelected = selectedSkills.some(function (s) {
+          return s.toLowerCase() === skill.toLowerCase();
+        });
+
+        if (isAlreadySelected) {
+          removeSkill(skill);
+        } else {
+          addSkill(skill);
+        }
+        hideSuggestions();
+        skillsTextInput.value = "";
+      });
+    })(quickPickChips[i]);
+  }
 
   // Show suggestions on input
   skillsTextInput.addEventListener("input", function (evt) {
@@ -531,6 +616,13 @@ if (clearFiltersBtn) {
           if (generalErr) generalErr.textContent = "Something went wrong. Please try again.";
         });
     });
+      .catch(function (err) {
+        // this runs if the network request itself fails 
+        setLoadingState(false);
+        var generalErr = document.getElementById("form-error-general");
+        if (generalErr) generalErr.textContent = "Something went wrong. Please try again.";
+      });
+  });
   });
 
   // Manages the loading state of the form and results section(whats visible or not)
@@ -540,6 +632,8 @@ if (clearFiltersBtn) {
     submitBtn.setAttribute("aria-busy", isLoading);
     btnLabel.style.display = isLoading ? "none" : "inline";
     btnLoading.style.display = isLoading ? "inline-flex" : "none";
+    btnLabel.style.display = isLoading ? "none" : "inline";
+    btnLoading.style.display = isLoading ? "inline" : "none";
 
     if (isLoading) {
       // Show the results section with only the loading indicator visible
@@ -584,6 +678,10 @@ if (clearFiltersBtn) {
         emptyMessageEl.textContent = "Try adjusting your skills or choosing a different interest area.";
       }
 
+    if (!projects || projects.length === 0) { //if no projects returned from api, show the "no results" message and hide the grid
+      resultsGrid.style.display      = "none";
+      resultsEmptyEl.style.display   = "block";
+      if (message && emptyMessageEl) emptyMessageEl.textContent = message; //if api sent back a message (e.g. "no projects found matching your criteria"), show that 
       resultsSection.scrollIntoView({ behavior: "smooth" });
       return;
     }
@@ -622,6 +720,8 @@ if (clearFiltersBtn) {
 
     // Show all project skills as tags so users can see the full match
     (project.skills || []).forEach(function (skill) {
+    // Show the first two skills as tags
+    (project.skills || []).slice(0, 2).forEach(function (skill) {
       tagsRow.appendChild(createTag(skill, "skill"));
     });
 
@@ -871,6 +971,7 @@ if (isDetailPage) {
     btnCopyCode.addEventListener("click", function () {
       var code = codeContentEl
         ? Array.from(codeContentEl.querySelectorAll(".line-content"))
+        ? Array.prototype.slice.call(codeContentEl.querySelectorAll(".line-content"))
           .map(function (el) { return el.textContent; })
           .join("\n")
         : "";
@@ -904,6 +1005,66 @@ if (isDetailPage) {
   }
 } // end isDetailPage
 
+if (
+    openModalBtn &&
+    closeModalBtn &&
+    modal &&
+    githubInput &&
+    fetchBtn &&
+    errorMsg
+) {
+// 1. Open Github Input Modal
+  openModalBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      modal.classList.add('active');
+      githubInput.focus();
+  });
+
+  // 2. Close Github Input Modal
+  const closeGithubModal = () => {
+      modal.classList.remove('active');
+      githubInput.value = '';
+      errorMsg.textContent = '';
+  };
+
+  closeModalBtn.addEventListener('click', closeGithubModal);
+
+  // Close on clicking outside the card
+  modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeGithubModal();
+  });
+
+  // 3. Fetch Skills Logic
+  fetchBtn.addEventListener('click', async () => {
+      const username = githubInput.value.trim();
+      if (!username) return;
+
+      fetchBtn.disabled = true;
+      fetchBtn.textContent = 'Syncing...';
+
+      try {
+          const response = await fetch(`https://api.github.com/users/${username}/repos`);
+          if (!response.ok) throw new Error();
+          
+          const repos = await response.json();
+          const langs = [...new Set(repos.map(r => r.language).filter(Boolean))];
+
+          if (langs.length > 0) {
+              langs.forEach(lang => {
+                  if (typeof addSkill === 'function') addSkill(lang);
+              });
+              closeGithubModal();
+          } else {
+              errorMsg.textContent = "No public languages found.";
+          }
+      } catch (err) {
+          errorMsg.textContent = err.message ?? "Failed to fetch skills";
+      } finally {
+          fetchBtn.disabled = false;
+          fetchBtn.textContent = 'Fetch Skills';
+      }
+  });
+}
 
 /* ---- Scroll-to-top button ---- */
 
