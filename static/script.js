@@ -296,9 +296,117 @@ updateProfileWidgets();
     : quickPickChips.map(function (chip) { return chip.getAttribute("data-skill"); });
   var activeSuggestionIndex = -1;
   var visibleSuggestions = [];
+  var SAVED_PROJECTS_KEY = "devpathSavedProjects";
 
   function normalize(value) {
     return String(value || "").trim().toLowerCase();
+  }
+
+  function getSavedProjects() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(SAVED_PROJECTS_KEY) || "[]");
+      return Array.isArray(saved) ? saved : [];
+    } catch (err) {
+      console.warn("Unable to load saved projects", err);
+      return [];
+    }
+  }
+
+  function saveSavedProjects(projects) {
+    try {
+      localStorage.setItem(SAVED_PROJECTS_KEY, JSON.stringify(projects));
+    } catch (err) {
+      console.warn("Unable to save projects", err);
+    }
+  }
+
+  function projectIsSaved(projectId) {
+    return getSavedProjects().some(function (project) {
+      return String(project.id) === String(projectId);
+    });
+  }
+
+  function saveProject(project) {
+    var saved = getSavedProjects();
+    if (saved.some(function (item) { return String(item.id) === String(project.id); })) return;
+
+    saved.unshift({
+      id: project.id,
+      title: project.title,
+      level: project.level || "",
+      time: project.time || "",
+      skills: Array.isArray(project.skills) ? project.skills.slice(0, 4) : []
+    });
+    saveSavedProjects(saved);
+    renderSavedProjects();
+  }
+
+  function removeSavedProject(projectId) {
+    var saved = getSavedProjects().filter(function (project) {
+      return String(project.id) !== String(projectId);
+    });
+    saveSavedProjects(saved);
+    renderSavedProjects();
+    document.querySelectorAll("[data-save-project-id='" + projectId + "']").forEach(function (button) {
+      button.classList.remove("saved");
+      button.textContent = "Save Project";
+      button.setAttribute("aria-pressed", "false");
+    });
+  }
+
+  function toggleSavedProject(project, button) {
+    if (projectIsSaved(project.id)) {
+      removeSavedProject(project.id);
+      return;
+    }
+
+    saveProject(project);
+    button.classList.add("saved");
+    button.textContent = "Saved";
+    button.setAttribute("aria-pressed", "true");
+  }
+
+  function renderSavedProjects() {
+    var list = document.getElementById("saved-projects-list");
+    var count = document.getElementById("saved-projects-count");
+    if (!list || !count) return;
+
+    var saved = getSavedProjects();
+    count.textContent = saved.length + " saved";
+    list.textContent = "";
+
+    if (!saved.length) {
+      var empty = document.createElement("p");
+      empty.className = "saved-projects-empty";
+      empty.textContent = "No saved projects yet.";
+      list.appendChild(empty);
+      return;
+    }
+
+    saved.forEach(function (project) {
+      var item = document.createElement("article");
+      item.className = "saved-project-item";
+
+      var title = document.createElement("a");
+      title.href = "/project/" + project.id;
+      title.textContent = project.title;
+
+      var meta = document.createElement("span");
+      meta.textContent = [project.level, project.time].filter(Boolean).join(" - ");
+
+      var remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "saved-project-remove";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", function () {
+        removeSavedProject(project.id);
+      });
+
+      item.appendChild(title);
+      item.appendChild(meta);
+      item.appendChild(remove);
+      list.appendChild(item);
+    });
   }
 
   function syncSkillsHiddenInput() {
@@ -520,10 +628,27 @@ updateProfileWidgets();
 
     var footer = document.createElement("div");
     footer.className = "project-card-footer";
+
+    var saveButton = document.createElement("button");
+    saveButton.type = "button";
+    saveButton.className = "btn-save-project";
+    saveButton.setAttribute("data-save-project-id", project.id);
+    saveButton.setAttribute("aria-pressed", projectIsSaved(project.id) ? "true" : "false");
+    if (projectIsSaved(project.id)) {
+      saveButton.classList.add("saved");
+      saveButton.textContent = "Saved";
+    } else {
+      saveButton.textContent = "Save Project";
+    }
+    saveButton.addEventListener("click", function () {
+      toggleSavedProject(project, saveButton);
+    });
+
     var link = document.createElement("a");
     link.className = "btn-details";
     link.textContent = "View Full Project";
     link.href = "/project/" + project.id;
+    footer.appendChild(saveButton);
     footer.appendChild(link);
 
     card.appendChild(title);
@@ -532,6 +657,8 @@ updateProfileWidgets();
     card.appendChild(footer);
     return card;
   }
+
+  renderSavedProjects();
 
   function renderResults(projects, message) {
     resultsSection.style.display = "block";
