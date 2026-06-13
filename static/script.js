@@ -696,9 +696,9 @@ function recordSearch() {
     
     clearAllErrors();
 
-    if (skillsTextInput.value.trim()) {
-      addSkill(skillsTextInput.value);
-      skillsTextInput.value = "";
+    if (skillsInput.value.trim()) {
+      addSkill(skillsInput.value);
+      skillsInput.value = "";
       hideSuggestions();
     }
 
@@ -839,47 +839,16 @@ function recordSearch() {
     resultsSection.scrollIntoView({ behavior: "smooth" });
   }
 
-  //takes the array of projects from the api and draws them on the page as cards
-  //if array is empty it shows the "no results" message instead
-  function renderResults(projects, message) {
-    console.log("Rendering results with projects:", projects);
-    console.log("Message:", message);
-    
-    resultsSection.style.display = "block";
-    resultsLoadingEl.style.display = "none";
-    // Clear out any cards from a previous search before showing new ones
-    resultsGrid.innerHTML = "";
-    recordSearch();
+  function truncate(text, maxLength) {
+    text = text || "";
+    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+  }
 
-    if (!projects || projects.length === 0) {
-      resultsGrid.style.display = "none";
-      resultsEmptyEl.style.display = "block";
-
-      // Show a friendly custom message when the user selected an interest
-      var selectedInterest = document.getElementById("interest")?.value;
-      if (selectedInterest) {
-        emptyMessageEl.textContent = "No projects are currently available for this interest. Please check back later or try a different area.";
-      } else if (message) {
-        emptyMessageEl.textContent = message;
-      } else {
-        emptyMessageEl.textContent = "Try adjusting your skills or choosing a different interest area.";
-      }
-
-  // Clear out previous results before rendering new ones
-  resultsGrid.innerHTML = "";
-
-  // If no projects are returned, show the empty state message
-  if (!projects || projects.length === 0) {
-    resultsGrid.style.display = "none";
-    resultsEmptyEl.style.display = "block";
-
-    projects.forEach(function (project) {
-      resultsGrid.appendChild(buildProjectCard(project));
-    });
-
-    recordSearch();
-    resultsSection.scrollIntoView({ behavior: "smooth" });
-    return;
+  function createTag(text, type) {
+    var span = document.createElement("span");
+    span.className = "project-tag project-tag--" + normalize(type).replace(/[^a-z0-9_-]/g, "-");
+    span.textContent = text;
+    return span;
   }
 
   function buildProjectCard(project) {
@@ -1312,33 +1281,38 @@ if (
           fetchBtn.textContent = 'Fetch Skills';
       }
   });
-}
+  update();
+})();
 
-/* ---- Scroll-to-top button ---- */
+(function initScrollSpy() {
+  var sections = document.querySelectorAll("section[id], header[id]");
+  var navLinks = document.querySelectorAll(".nav-link, .nav-mobile-link");
 
-/* Show the button only when the user has scrolled more than 300px */
-var SCROLL_THRESHOLD = 300;
+  if (sections.length === 0 || navLinks.length === 0) return;
 
-/* Get the button element; guard against pages that do not have it */
-var scrollTopBtn = document.getElementById('scroll-top-btn');
+  var observerOptions = {
+    root: null,
+    rootMargin: "-20% 0px -70% 0px",
+    threshold: 0
+  };
 
-/* Add or remove the .visible class based on scroll position */
-function handleScroll() {
-  if (!scrollTopBtn) return;
-  if (window.pageYOffset > SCROLL_THRESHOLD) {
-    scrollTopBtn.classList.add('visible');
-  } else {
-    scrollTopBtn.classList.remove('visible');
-  }
-}
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        var id = entry.target.getAttribute("id");
+        navLinks.forEach(function (link) {
+          var href = link.getAttribute("href");
+          if (href === "#" + id) {
+            link.classList.add("active");
+          } else if (href && href.startsWith("#")) {
+            link.classList.remove("active");
+          }
+        });
+      }
+    });
+  }, observerOptions);
 
-/* Smooth-scroll to the very top of the page */
-function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-/* Only wire up listeners if the button exists on this page */
-if (scrollTopBtn) {
-    window.addEventListener('scroll', handleScroll);
-    scrollTopBtn.addEventListener('click', scrollToTop);
-}
+  sections.forEach(function (sec) {
+    observer.observe(sec);
+  });
+})();
